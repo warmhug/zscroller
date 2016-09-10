@@ -21468,19 +21468,19 @@ webpackJsonp([0,1],[
 	  this.container = content.parentNode;
 	  this.options = _extends({}, options, {
 	    scrollingComplete: function scrollingComplete() {
-	      if (options.scrollingComplete) {
-	        options.scrollingComplete();
-	      }
-	      if (scrollbars) {
-	        _this.clearScrollbarTimer();
-	        _this.timer = setTimeout(function () {
+	      _this.clearScrollbarTimer();
+	      _this.timer = setTimeout(function () {
+	        if (options.scrollingComplete) {
+	          options.scrollingComplete();
+	        }
+	        if (scrollbars) {
 	          ['x', 'y'].forEach(function (k) {
 	            if (scrollbars[k]) {
 	              _this.setScrollbarOpacity(k, 0);
 	            }
 	          });
-	        }, 0);
-	      }
+	        }
+	      }, 0);
 	    }
 	  });
 	
@@ -21511,10 +21511,11 @@ webpackJsonp([0,1],[
 	  }
 	
 	  var init = true;
+	  var contentStyle = content.style;
 	
 	  // create Scroller instance
 	  this.scroller = new Scroller(function (left, top, zoom) {
-	    setTransform(content.style, 'translate3d(' + -left + 'px,' + -top + 'px,0) scale(' + zoom + ')');
+	    setTransform(contentStyle, 'translate3d(' + -left + 'px,' + -top + 'px,0) scale(' + zoom + ')');
 	    if (scrollbars) {
 	      ['x', 'y'].forEach(function (k) {
 	        if (scrollbars[k]) {
@@ -21555,6 +21556,10 @@ webpackJsonp([0,1],[
 	  // reflow for the first time
 	  this.reflow();
 	}
+	
+	DOMScroller.prototype.setDisabled = function setDisabled(disabled) {
+	  this.disabled = disabled;
+	};
 	
 	DOMScroller.prototype.clearScrollbarTimer = function clearScrollbarTimer() {
 	  if (this.timer) {
@@ -21635,7 +21640,7 @@ webpackJsonp([0,1],[
 	  if ('ontouchstart' in window) {
 	    this.container.addEventListener('touchstart', this.onTouchStart = function (e) {
 	      // Don't react if initial down happens on a form element
-	      if (e.touches[0] && e.touches[0].target && e.touches[0].target.tagName.match(/input|textarea|select/i)) {
+	      if (e.touches[0] && e.touches[0].target && e.touches[0].target.tagName.match(/input|textarea|select/i) || _this2.disabled) {
 	        return;
 	      }
 	      _this2.clearScrollbarTimer();
@@ -21662,7 +21667,7 @@ webpackJsonp([0,1],[
 	    (function () {
 	      var mousedown = false;
 	      _this2.container.addEventListener('mousedown', _this2.onMouseDown = function (e) {
-	        if (e.target.tagName.match(/input|textarea|select/i)) {
+	        if (e.target.tagName.match(/input|textarea|select/i) || _this2.disabled) {
 	          return;
 	        }
 	        _this2.clearScrollbarTimer();
@@ -22211,7 +22216,7 @@ webpackJsonp([0,1],[
 	   * @param animate {Boolean?false} Whether the scrolling should happen using an animation
 	   * @param zoom {Number?null} Zoom level to go to
 	   */
-	  scrollTo: function scrollTo(left, top, animate, zoom) {
+	  scrollTo: function scrollTo(left, top, animate, zoom, callback) {
 	
 	    var self = this;
 	
@@ -22271,6 +22276,9 @@ webpackJsonp([0,1],[
 	    // that rendered position is really in-sync with internal data
 	    if (left === self.__scrollLeft && top === self.__scrollTop) {
 	      animate = false;
+	      if (callback) {
+	        callback();
+	      }
 	    }
 	
 	    // Publish new values
@@ -22750,6 +22758,7 @@ webpackJsonp([0,1],[
 	        if (animationId === self.__isAnimating) {
 	          self.__isAnimating = false;
 	        }
+	
 	        if (self.__didDecelerationComplete || wasFinished) {
 	          self.options.scrollingComplete();
 	        }
@@ -22843,7 +22852,12 @@ webpackJsonp([0,1],[
 	    };
 	
 	    // How much velocity is required to keep the deceleration running
-	    var minVelocityToKeepDecelerating = self.options.snapping ? 4 : 0.001;
+	    // added by yiminghe
+	    var minVelocityToKeepDecelerating = self.options.minVelocityToKeepDecelerating;
+	
+	    if (!minVelocityToKeepDecelerating) {
+	      minVelocityToKeepDecelerating = self.options.snapping ? 4 : 0.001;
+	    }
 	
 	    // Detect whether it's still worth to continue animating steps
 	    // If we are already slow enough to not being user perceivable anymore, we stop the whole process here.
@@ -22857,12 +22871,9 @@ webpackJsonp([0,1],[
 	
 	    var completed = function completed(renderedFramesPerSecond, animationId, wasFinished) {
 	      self.__isDecelerating = false;
-	      if (self.__didDecelerationComplete) {
-	        self.options.scrollingComplete();
-	      }
-	
 	      // Animate to grid when snapping is active, otherwise just fix out-of-boundary positions
-	      self.scrollTo(self.__scrollLeft, self.__scrollTop, self.options.snapping);
+	      // fixed by yiminghe, in case call scrollingComplete twice
+	      self.scrollTo(self.__scrollLeft, self.__scrollTop, self.options.snapping, null, self.__didDecelerationComplete && self.options.scrollingComplete);
 	    };
 	
 	    // Start animation and switch on flag
@@ -22993,6 +23004,8 @@ webpackJsonp([0,1],[
 
 	/* WEBPACK VAR INJECTION */(function(global) {"use strict";
 	
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	
 	/*
 	 * Scroller
 	 * http://github.com/zynga/scroller
@@ -23018,13 +23031,15 @@ webpackJsonp([0,1],[
 	 * based on the pure time difference.
 	 */
 	
-	var time = Date.now || function () {
-	  return +new Date();
-	};
 	var desiredFrames = 60;
 	var millisecondsPerSecond = 1000;
 	var running = {};
 	var counter = 1;
+	var win = (typeof window === "undefined" ? "undefined" : _typeof(window)) !== undefined ? window : undefined;
+	
+	if (!win) {
+	  win = (typeof global === "undefined" ? "undefined" : _typeof(global)) !== undefined ? global : {};
+	}
 	
 	var Animate = {
 	
@@ -23037,7 +23052,7 @@ webpackJsonp([0,1],[
 	  requestAnimationFrame: function () {
 	
 	    // Check for request animation Frame support
-	    var requestFrame = global.requestAnimationFrame || global.webkitRequestAnimationFrame || global.mozRequestAnimationFrame || global.oRequestAnimationFrame;
+	    var requestFrame = win.requestAnimationFrame || win.webkitRequestAnimationFrame || win.mozRequestAnimationFrame || win.oRequestAnimationFrame;
 	    var isNative = !!requestFrame;
 	
 	    if (requestFrame && !/requestAnimationFrame\(\)\s*\{\s*\[native code\]\s*\}/i.test(requestFrame.toString())) {
@@ -23139,7 +23154,7 @@ webpackJsonp([0,1],[
 	   */
 	  start: function start(stepCallback, verifyCallback, completedCallback, duration, easingMethod, root) {
 	
-	    var start = time();
+	    var start = +new Date();
 	    var lastFrame = start;
 	    var percent = 0;
 	    var dropCounter = 0;
@@ -23165,7 +23180,7 @@ webpackJsonp([0,1],[
 	      var render = virtual !== true;
 	
 	      // Get current time
-	      var now = time();
+	      var now = +new Date();
 	
 	      // Verification is executed before next animation step
 	      if (!running[id] || verifyCallback && !verifyCallback(id)) {
