@@ -44,8 +44,11 @@ webpackJsonp([0,1],[
 	), document.getElementById('__react-content'));
 	
 	/* eslint no-new:0 */
-	new _zscroller2.default(root.firstChild, {
-	  scrollbars: true
+	var zscroller = new _zscroller2.default(root.firstChild, {
+	  scrollbars: true,
+	  onScroll: function onScroll() {
+	    console.log(zscroller.scroller.getValues());
+	  }
 	});
 
 /***/ },
@@ -21515,6 +21518,9 @@ webpackJsonp([0,1],[
 	
 	  // create Scroller instance
 	  this.scroller = new Scroller(function (left, top, zoom) {
+	    if (!init && options.onScroll) {
+	      options.onScroll();
+	    }
 	    setTransform(contentStyle, 'translate3d(' + -left + 'px,' + -top + 'px,0) scale(' + zoom + ')');
 	    if (scrollbars) {
 	      ['x', 'y'].forEach(function (k) {
