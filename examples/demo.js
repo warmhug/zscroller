@@ -23008,9 +23008,7 @@ webpackJsonp([0,1],[
 /* 176 */
 /***/ function(module, exports) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {"use strict";
-	
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
 	
 	/*
 	 * Scroller
@@ -23041,10 +23039,10 @@ webpackJsonp([0,1],[
 	var millisecondsPerSecond = 1000;
 	var running = {};
 	var counter = 1;
-	var win = (typeof window === "undefined" ? "undefined" : _typeof(window)) !== undefined ? window : undefined;
+	var win = typeof window !== 'undefined' ? window : undefined;
 	
 	if (!win) {
-	  win = (typeof global === "undefined" ? "undefined" : _typeof(global)) !== undefined ? global : {};
+	  win = typeof global !== 'undefined' ? global : {};
 	}
 	
 	var Animate = {
