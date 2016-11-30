@@ -23,7 +23,7 @@ webpackJsonp([0,1],[
 	
 	var _zscroller2 = _interopRequireDefault(_zscroller);
 	
-	__webpack_require__(183);
+	__webpack_require__(185);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -626,7 +626,7 @@ webpackJsonp([0,1],[
 
 /***/ },
 /* 7 */
-[184, 8],
+[186, 8],
 /* 8 */
 /***/ function(module, exports) {
 
@@ -3073,30 +3073,38 @@ webpackJsonp([0,1],[
 	// Set.prototype.keys
 	Set.prototype != null && typeof Set.prototype.keys === 'function' && isNative(Set.prototype.keys);
 	
+	var setItem;
+	var getItem;
+	var removeItem;
+	var getItemIDs;
+	var addRoot;
+	var removeRoot;
+	var getRootIDs;
+	
 	if (canUseCollections) {
 	  var itemMap = new Map();
 	  var rootIDSet = new Set();
 	
-	  var setItem = function (id, item) {
+	  setItem = function (id, item) {
 	    itemMap.set(id, item);
 	  };
-	  var getItem = function (id) {
+	  getItem = function (id) {
 	    return itemMap.get(id);
 	  };
-	  var removeItem = function (id) {
+	  removeItem = function (id) {
 	    itemMap['delete'](id);
 	  };
-	  var getItemIDs = function () {
+	  getItemIDs = function () {
 	    return Array.from(itemMap.keys());
 	  };
 	
-	  var addRoot = function (id) {
+	  addRoot = function (id) {
 	    rootIDSet.add(id);
 	  };
-	  var removeRoot = function (id) {
+	  removeRoot = function (id) {
 	    rootIDSet['delete'](id);
 	  };
-	  var getRootIDs = function () {
+	  getRootIDs = function () {
 	    return Array.from(rootIDSet.keys());
 	  };
 	} else {
@@ -3112,31 +3120,31 @@ webpackJsonp([0,1],[
 	    return parseInt(key.substr(1), 10);
 	  };
 	
-	  var setItem = function (id, item) {
+	  setItem = function (id, item) {
 	    var key = getKeyFromID(id);
 	    itemByKey[key] = item;
 	  };
-	  var getItem = function (id) {
+	  getItem = function (id) {
 	    var key = getKeyFromID(id);
 	    return itemByKey[key];
 	  };
-	  var removeItem = function (id) {
+	  removeItem = function (id) {
 	    var key = getKeyFromID(id);
 	    delete itemByKey[key];
 	  };
-	  var getItemIDs = function () {
+	  getItemIDs = function () {
 	    return Object.keys(itemByKey).map(getIDFromKey);
 	  };
 	
-	  var addRoot = function (id) {
+	  addRoot = function (id) {
 	    var key = getKeyFromID(id);
 	    rootByKey[key] = true;
 	  };
-	  var removeRoot = function (id) {
+	  removeRoot = function (id) {
 	    var key = getKeyFromID(id);
 	    delete rootByKey[key];
 	  };
-	  var getRootIDs = function () {
+	  getRootIDs = function () {
 	    return Object.keys(rootByKey).map(getIDFromKey);
 	  };
 	}
@@ -3917,7 +3925,7 @@ webpackJsonp([0,1],[
 	
 	'use strict';
 	
-	module.exports = '15.4.0';
+	module.exports = '15.4.1';
 
 /***/ },
 /* 32 */
@@ -5281,6 +5289,28 @@ webpackJsonp([0,1],[
 	  return '.' + inst._rootNodeID;
 	};
 	
+	function isInteractive(tag) {
+	  return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
+	}
+	
+	function shouldPreventMouseEvent(name, type, props) {
+	  switch (name) {
+	    case 'onClick':
+	    case 'onClickCapture':
+	    case 'onDoubleClick':
+	    case 'onDoubleClickCapture':
+	    case 'onMouseDown':
+	    case 'onMouseDownCapture':
+	    case 'onMouseMove':
+	    case 'onMouseMoveCapture':
+	    case 'onMouseUp':
+	    case 'onMouseUpCapture':
+	      return !!(props.disabled && isInteractive(type));
+	    default:
+	      return false;
+	  }
+	}
+	
 	/**
 	 * This is a unified interface for event plugins to be installed and configured.
 	 *
@@ -5349,7 +5379,12 @@ webpackJsonp([0,1],[
 	   * @return {?function} The stored callback.
 	   */
 	  getListener: function (inst, registrationName) {
+	    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+	    // live here; needs to be moved to a better place soon
 	    var bankForRegistrationName = listenerBank[registrationName];
+	    if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, inst._currentElement.props)) {
+	      return null;
+	    }
 	    var key = getDictionaryKey(inst);
 	    return bankForRegistrationName && bankForRegistrationName[key];
 	  },
@@ -6283,7 +6318,7 @@ webpackJsonp([0,1],[
 
 /***/ },
 /* 51 */
-[184, 36],
+[186, 36],
 /* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -19139,18 +19174,6 @@ webpackJsonp([0,1],[
 	  return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
 	}
 	
-	function shouldPreventMouseEvent(inst) {
-	  if (inst) {
-	    var disabled = inst._currentElement && inst._currentElement.props.disabled;
-	
-	    if (disabled) {
-	      return isInteractive(inst._tag);
-	    }
-	  }
-	
-	  return false;
-	}
-	
 	var SimpleEventPlugin = {
 	
 	  eventTypes: eventTypes,
@@ -19221,10 +19244,7 @@ webpackJsonp([0,1],[
 	      case 'topMouseDown':
 	      case 'topMouseMove':
 	      case 'topMouseUp':
-	        // Disabled elements should not respond to mouse events
-	        if (shouldPreventMouseEvent(targetInst)) {
-	          return null;
-	        }
+	      // TODO: Disabled elements should not respond to mouse events
 	      /* falls through */
 	      case 'topMouseOut':
 	      case 'topMouseOver':
@@ -20970,7 +20990,9 @@ webpackJsonp([0,1],[
 	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 	
-	var Scroller = __webpack_require__(181);
+	__webpack_require__(181); // vendor check
+	
+	var Scroller = __webpack_require__(183);
 	var MIN_INDICATOR_SIZE = 8;
 	
 	function setTransform(nodeStyle, value) {
@@ -21178,84 +21200,203 @@ webpackJsonp([0,1],[
 	    that.reflow();
 	  }, false);
 	
-	  // touch devices bind touch events
-	  if ('ontouchstart' in window) {
-	    this.container.addEventListener('touchstart', this.onTouchStart = function (e) {
-	      // Don't react if initial down happens on a form element
-	      if (e.touches[0] && e.touches[0].target && e.touches[0].target.tagName.match(/input|textarea|select/i) || _this2.disabled) {
-	        return;
-	      }
-	      _this2.clearScrollbarTimer();
-	      // reflow since the container may have changed
-	      that.reflow();
-	      that.scroller.doTouchStart(e.touches, e.timeStamp);
-	    }, false);
+	  var lockMouse = false;
+	  var releaseLockTimer = void 0;
 	
-	    this.container.addEventListener('touchmove', this.onTouchMove = function (e) {
+	  this.container.addEventListener('touchstart', this.onTouchStart = function (e) {
+	    lockMouse = true;
+	    if (releaseLockTimer) {
+	      clearTimeout(releaseLockTimer);
+	      releaseLockTimer = null;
+	    }
+	    // Don't react if initial down happens on a form element
+	    if (e.touches[0] && e.touches[0].target && e.touches[0].target.tagName.match(/input|textarea|select/i) || _this2.disabled) {
+	      return;
+	    }
+	    _this2.clearScrollbarTimer();
+	    // reflow since the container may have changed
+	    that.reflow();
+	    that.scroller.doTouchStart(e.touches, e.timeStamp);
+	  }, false);
+	
+	  this.container.addEventListener('touchmove', this.onTouchMove = function (e) {
+	    e.preventDefault();
+	    that.scroller.doTouchMove(e.touches, e.timeStamp, e.scale);
+	  }, false);
+	
+	  this.container.addEventListener('touchend', this.onTouchEnd = function (e) {
+	    that.scroller.doTouchEnd(e.timeStamp);
+	    releaseLockTimer = setTimeout(function () {
+	      lockMouse = false;
+	    }, 300);
+	  }, false);
+	
+	  this.container.addEventListener('touchcancel', this.onTouchCancel = function (e) {
+	    that.scroller.doTouchEnd(e.timeStamp);
+	    releaseLockTimer = setTimeout(function () {
+	      lockMouse = false;
+	    }, 300);
+	  }, false);
+	
+	  this.onMouseUp = function (e) {
+	    that.scroller.doTouchEnd(e.timeStamp);
+	    document.removeEventListener('mousemove', _this2.onMouseMove, false);
+	    document.removeEventListener('mouseup', _this2.onMouseUp, false);
+	  };
+	
+	  this.onMouseMove = function (e) {
+	    that.scroller.doTouchMove([{
+	      pageX: e.pageX,
+	      pageY: e.pageY
+	    }], e.timeStamp);
+	  };
+	
+	  this.container.addEventListener('mousedown', this.onMouseDown = function (e) {
+	    if (lockMouse || e.target.tagName.match(/input|textarea|select/i) || _this2.disabled) {
+	      return;
+	    }
+	    _this2.clearScrollbarTimer();
+	    that.scroller.doTouchStart([{
+	      pageX: e.pageX,
+	      pageY: e.pageY
+	    }], e.timeStamp);
+	    // reflow since the container may have changed
+	    that.reflow();
+	    e.preventDefault();
+	    document.addEventListener('mousemove', _this2.onMouseMove, false);
+	    document.addEventListener('mouseup', _this2.onMouseUp, false);
+	  }, false);
+	
+	  this.container.addEventListener('mousewheel', this.onMouseWheel = function (e) {
+	    if (that.options.zooming) {
+	      that.scroller.doMouseZoom(e.wheelDelta, e.timeStamp, e.pageX, e.pageY);
 	      e.preventDefault();
-	      that.scroller.doTouchMove(e.touches, e.timeStamp, e.scale);
-	    }, false);
-	
-	    this.container.addEventListener('touchend', this.onTouchEnd = function (e) {
-	      that.scroller.doTouchEnd(e.timeStamp);
-	    }, false);
-	
-	    this.container.addEventListener('touchcancel', this.onTouchCancel = function (e) {
-	      that.scroller.doTouchEnd(e.timeStamp);
-	    }, false);
-	
-	    // non-touch bind mouse events
-	  } else {
-	    (function () {
-	      var mousedown = false;
-	      _this2.container.addEventListener('mousedown', _this2.onMouseDown = function (e) {
-	        if (e.target.tagName.match(/input|textarea|select/i) || _this2.disabled) {
-	          return;
-	        }
-	        _this2.clearScrollbarTimer();
-	        that.scroller.doTouchStart([{
-	          pageX: e.pageX,
-	          pageY: e.pageY
-	        }], e.timeStamp);
-	        mousedown = true;
-	        // reflow since the container may have changed
-	        that.reflow();
-	        e.preventDefault();
-	      }, false);
-	
-	      document.addEventListener('mousemove', _this2.onMouseMove = function (e) {
-	        if (!mousedown) {
-	          return;
-	        }
-	        that.scroller.doTouchMove([{
-	          pageX: e.pageX,
-	          pageY: e.pageY
-	        }], e.timeStamp);
-	        mousedown = true;
-	      }, false);
-	
-	      document.addEventListener('mouseup', _this2.onMouseUp = function (e) {
-	        if (!mousedown) {
-	          return;
-	        }
-	        that.scroller.doTouchEnd(e.timeStamp);
-	        mousedown = false;
-	      }, false);
-	
-	      _this2.container.addEventListener('mousewheel', _this2.onMouseWheel = function (e) {
-	        if (that.options.zooming) {
-	          that.scroller.doMouseZoom(e.wheelDelta, e.timeStamp, e.pageX, e.pageY);
-	          e.preventDefault();
-	        }
-	      }, false);
-	    })();
-	  }
+	    }
+	  }, false);
 	};
 	
 	module.exports = DOMScroller;
 
 /***/ },
 /* 181 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(182)
+	  , root = typeof window === 'undefined' ? global : window
+	  , vendors = ['moz', 'webkit']
+	  , suffix = 'AnimationFrame'
+	  , raf = root['request' + suffix]
+	  , caf = root['cancel' + suffix] || root['cancelRequest' + suffix]
+	
+	for(var i = 0; !raf && i < vendors.length; i++) {
+	  raf = root[vendors[i] + 'Request' + suffix]
+	  caf = root[vendors[i] + 'Cancel' + suffix]
+	      || root[vendors[i] + 'CancelRequest' + suffix]
+	}
+	
+	// Some versions of FF have rAF but not cAF
+	if(!raf || !caf) {
+	  var last = 0
+	    , id = 0
+	    , queue = []
+	    , frameDuration = 1000 / 60
+	
+	  raf = function(callback) {
+	    if(queue.length === 0) {
+	      var _now = now()
+	        , next = Math.max(0, frameDuration - (_now - last))
+	      last = next + _now
+	      setTimeout(function() {
+	        var cp = queue.slice(0)
+	        // Clear queue here to prevent
+	        // callbacks from appending listeners
+	        // to the current frame's queue
+	        queue.length = 0
+	        for(var i = 0; i < cp.length; i++) {
+	          if(!cp[i].cancelled) {
+	            try{
+	              cp[i].callback(last)
+	            } catch(e) {
+	              setTimeout(function() { throw e }, 0)
+	            }
+	          }
+	        }
+	      }, Math.round(next))
+	    }
+	    queue.push({
+	      handle: ++id,
+	      callback: callback,
+	      cancelled: false
+	    })
+	    return id
+	  }
+	
+	  caf = function(handle) {
+	    for(var i = 0; i < queue.length; i++) {
+	      if(queue[i].handle === handle) {
+	        queue[i].cancelled = true
+	      }
+	    }
+	  }
+	}
+	
+	module.exports = function(fn) {
+	  // Wrap in a new function to prevent
+	  // `cancel` potentially being assigned
+	  // to the native rAF function
+	  return raf.call(root, fn)
+	}
+	module.exports.cancel = function() {
+	  caf.apply(root, arguments)
+	}
+	module.exports.polyfill = function() {
+	  root.requestAnimationFrame = raf
+	  root.cancelAnimationFrame = caf
+	}
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 182 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
+	(function() {
+	  var getNanoSeconds, hrtime, loadTime;
+	
+	  if ((typeof performance !== "undefined" && performance !== null) && performance.now) {
+	    module.exports = function() {
+	      return performance.now();
+	    };
+	  } else if ((typeof process !== "undefined" && process !== null) && process.hrtime) {
+	    module.exports = function() {
+	      return (getNanoSeconds() - loadTime) / 1e6;
+	    };
+	    hrtime = process.hrtime;
+	    getNanoSeconds = function() {
+	      var hr;
+	      hr = hrtime();
+	      return hr[0] * 1e9 + hr[1];
+	    };
+	    loadTime = getNanoSeconds();
+	  } else if (Date.now) {
+	    module.exports = function() {
+	      return Date.now() - loadTime;
+	    };
+	    loadTime = Date.now();
+	  } else {
+	    module.exports = function() {
+	      return new Date().getTime() - loadTime;
+	    };
+	    loadTime = new Date().getTime();
+	  }
+	
+	}).call(this);
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+
+/***/ },
+/* 183 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -21275,7 +21416,7 @@ webpackJsonp([0,1],[
 	 */
 	
 	var Scroller;
-	var Animate = __webpack_require__(182);
+	var Animate = __webpack_require__(184);
 	
 	var NOOP = function NOOP() {};
 	
@@ -22541,8 +22682,8 @@ webpackJsonp([0,1],[
 	module.exports = Scroller;
 
 /***/ },
-/* 182 */
-/***/ function(module, exports) {
+/* 184 */
+/***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
 	
@@ -22570,6 +22711,7 @@ webpackJsonp([0,1],[
 	 * rendering. This eases a lot of cases where it might be pretty complex to break down a state
 	 * based on the pure time difference.
 	 */
+	var raf = __webpack_require__(181);
 	
 	var desiredFrames = 60;
 	var millisecondsPerSecond = 1000;
@@ -22582,75 +22724,6 @@ webpackJsonp([0,1],[
 	}
 	
 	var Animate = {
-	
-	  /**
-	   * A requestAnimationFrame wrapper / polyfill.
-	   *
-	   * @param callback {Function} The callback to be invoked before the next repaint.
-	   * @param root {HTMLElement} The root element for the repaint
-	   */
-	  requestAnimationFrame: function () {
-	
-	    // Check for request animation Frame support
-	    var requestFrame = win.requestAnimationFrame || win.webkitRequestAnimationFrame || win.mozRequestAnimationFrame || win.oRequestAnimationFrame;
-	    var isNative = !!requestFrame;
-	
-	    if (requestFrame && !/requestAnimationFrame\(\)\s*\{\s*\[native code\]\s*\}/i.test(requestFrame.toString())) {
-	      isNative = false;
-	    }
-	
-	    if (isNative) {
-	      return function (callback, root) {
-	        requestFrame(callback, root);
-	      };
-	    }
-	
-	    var TARGET_FPS = 60;
-	    var requests = {};
-	    var requestCount = 0;
-	    var rafHandle = 1;
-	    var intervalHandle = null;
-	    var lastActive = +new Date();
-	
-	    return function (callback, root) {
-	      var callbackHandle = rafHandle++;
-	
-	      // Store callback
-	      requests[callbackHandle] = callback;
-	      requestCount++;
-	
-	      // Create timeout at first request
-	      if (intervalHandle === null) {
-	
-	        intervalHandle = setInterval(function () {
-	
-	          var time = +new Date();
-	          var currentRequests = requests;
-	
-	          // Reset data structure before executing callbacks
-	          requests = {};
-	          requestCount = 0;
-	
-	          for (var key in currentRequests) {
-	            if (currentRequests.hasOwnProperty(key)) {
-	              currentRequests[key](time);
-	              lastActive = time;
-	            }
-	          }
-	
-	          // Disable the timeout when nothing happens for a certain
-	          // period of time
-	          if (time - lastActive > 2500) {
-	            clearInterval(intervalHandle);
-	            intervalHandle = null;
-	          }
-	        }, 1000 / TARGET_FPS);
-	      }
-	
-	      return callbackHandle;
-	    };
-	  }(),
-	
 	  /**
 	   * Stops the given animation.
 	   *
@@ -22688,21 +22761,14 @@ webpackJsonp([0,1],[
 	   * @param duration {Integer} Milliseconds to run the animation
 	   * @param easingMethod {Function} Pointer to easing function
 	   *   Signature of the method should be `function(percent) { return modifiedValue; }`
-	   * @param root {Element ? document.body} Render root, when available. Used for internal
-	   *   usage of requestAnimationFrame.
 	   * @return {Integer} Identifier of animation. Can be used to stop it any time.
 	   */
-	  start: function start(stepCallback, verifyCallback, completedCallback, duration, easingMethod, root) {
-	
+	  start: function start(stepCallback, verifyCallback, completedCallback, duration, easingMethod) {
 	    var start = +new Date();
 	    var lastFrame = start;
 	    var percent = 0;
 	    var dropCounter = 0;
 	    var id = counter++;
-	
-	    if (!root) {
-	      root = document.body;
-	    }
 	
 	    // Compacting running db automatically every few new animations
 	    if (id % 20 === 0) {
@@ -22715,7 +22781,6 @@ webpackJsonp([0,1],[
 	
 	    // This is the internal step method which is called every few milliseconds
 	    var step = function step(virtual) {
-	
 	      // Normalize virtual value
 	      var render = virtual !== true;
 	
@@ -22756,7 +22821,7 @@ webpackJsonp([0,1],[
 	        completedCallback && completedCallback(desiredFrames - dropCounter / ((now - start) / millisecondsPerSecond), id, percent === 1 || duration == null);
 	      } else if (render) {
 	        lastFrame = now;
-	        Animate.requestAnimationFrame(step, root);
+	        raf(step);
 	      }
 	    };
 	
@@ -22764,7 +22829,7 @@ webpackJsonp([0,1],[
 	    running[id] = true;
 	
 	    // Init first step
-	    Animate.requestAnimationFrame(step, root);
+	    raf(step);
 	
 	    // Return unique animation ID
 	    return id;
@@ -22775,13 +22840,13 @@ webpackJsonp([0,1],[
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 183 */
+/* 185 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 184 */
+/* 186 */
 /***/ function(module, exports, __webpack_require__, __webpack_module_template_argument_0__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
