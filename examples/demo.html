@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>demo.js - example - zscroller@0.2.5</title>
+  <title>demo.js - example - zscroller@0.3.0</title>
   <meta name="viewport"
         content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
   <meta charset="utf-8"/>
@@ -263,7 +263,7 @@ Monokai Sublime style. Derived from Monokai by noformnocontent http://nn.mit-lic
 <body>
   <div class="container">
     <div class="header">
-      <h1>zscroller@0.2.5</h1>
+      <h1>zscroller@0.3.0</h1>
 
       <p>dom scroller based on zynga scroller</p>
     </div>
@@ -274,30 +274,46 @@ Monokai Sublime style. Derived from Monokai by noformnocontent http://nn.mit-lic
 <span class="hljs-keyword">import</span> ZScroller <span class="hljs-keyword">from</span> <span class="hljs-string">'zscroller'</span>;
 <span class="hljs-keyword">import</span> <span class="hljs-string">'zscroller/assets/index.css'</span>;
 
-<span class="hljs-keyword">const</span> root = ReactDOM.render(
-  <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-title">div</span>
-    <span class="hljs-attribute">style</span>=<span class="hljs-value">{{</span>
-      <span class="hljs-attribute">width:</span> <span class="hljs-attribute">500</span>,
-      <span class="hljs-attribute">height:</span> <span class="hljs-attribute">300</span>,
-      <span class="hljs-attribute">border:</span> '<span class="hljs-attribute">1px</span> <span class="hljs-attribute">solid</span> <span class="hljs-attribute">green</span>',
-      <span class="hljs-attribute">padding:</span> <span class="hljs-attribute">10</span>,
-      <span class="hljs-attribute">overflow:</span> '<span class="hljs-attribute">hidden</span>',
-      <span class="hljs-attribute">margin:</span> '<span class="hljs-attribute">10px</span> <span class="hljs-attribute">auto</span>',
-      <span class="hljs-attribute">position:</span> '<span class="hljs-attribute">relative</span>',
-    }}
-  &gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">style</span>=<span class="hljs-value">{{</span> <span class="hljs-attribute">height:</span> <span class="hljs-attribute">1000</span>, <span class="hljs-attribute">width:</span> <span class="hljs-attribute">1000</span>, <span class="hljs-attribute">border:</span> '<span class="hljs-attribute">1px</span> <span class="hljs-attribute">solid</span> <span class="hljs-attribute">red</span>' }}&gt;</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">start</span>(<span class="hljs-params">e</span>) </span>{
+  e.currentTarget.disabled = <span class="hljs-literal">true</span>;
+  <span class="hljs-keyword">const</span> zscroller = <span class="hljs-keyword">new</span> ZScroller(<span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'root'</span>), {
+    scrollbars: <span class="hljs-literal">true</span>,
+    scrollingX: <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'scrollingX'</span>).checked,
+    scrollingY: <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'scrollingY'</span>).checked,
+    locking: <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'locking'</span>).checked,
+    onScroll() {
+      <span class="hljs-built_in">console</span>.log(zscroller.scroller.getValues());
+    },
+  });
+}
 
+ReactDOM.render(
+  <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-title">div</span>&gt;</span>
+    locking: <span class="hljs-tag">&lt;<span class="hljs-title">input</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"checkbox"</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"locking"</span> <span class="hljs-attribute">defaultChecked</span>/&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">br</span> /&gt;</span>
+    scrollingX: <span class="hljs-tag">&lt;<span class="hljs-title">input</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"checkbox"</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"scrollingX"</span> <span class="hljs-attribute">defaultChecked</span>/&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">br</span> /&gt;</span>
+    scrollingY: <span class="hljs-tag">&lt;<span class="hljs-title">input</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"checkbox"</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"scrollingY"</span> <span class="hljs-attribute">defaultChecked</span>/&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">br</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">button</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"start"</span> <span class="hljs-attribute">onClick</span>=<span class="hljs-value">{start}</span>&gt;</span>start<span class="hljs-tag">&lt;/<span class="hljs-title">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">div</span>
+      <span class="hljs-attribute">style</span>=<span class="hljs-value">{{</span>
+        <span class="hljs-attribute">width:</span> <span class="hljs-attribute">500</span>,
+        <span class="hljs-attribute">height:</span> <span class="hljs-attribute">300</span>,
+        <span class="hljs-attribute">border:</span> '<span class="hljs-attribute">1px</span> <span class="hljs-attribute">solid</span> <span class="hljs-attribute">green</span>',
+        <span class="hljs-attribute">padding:</span> <span class="hljs-attribute">10</span>,
+        <span class="hljs-attribute">overflow:</span> '<span class="hljs-attribute">hidden</span>',
+        <span class="hljs-attribute">margin:</span> '<span class="hljs-attribute">10px</span> <span class="hljs-attribute">auto</span>',
+        <span class="hljs-attribute">position:</span> '<span class="hljs-attribute">relative</span>',
+      }}
+    &gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"root"</span> <span class="hljs-attribute">style</span>=<span class="hljs-value">{{</span> <span class="hljs-attribute">height:</span> <span class="hljs-attribute">1000</span>, <span class="hljs-attribute">width:</span> <span class="hljs-attribute">1000</span>, <span class="hljs-attribute">border:</span> '<span class="hljs-attribute">1px</span> <span class="hljs-attribute">solid</span> <span class="hljs-attribute">red</span>' }}&gt;</span>
+
+      <span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span>
     <span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span>
   <span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span>, document.getElementById('__react-content'));
 
 /* eslint no-new:0 */
-const zscroller = new ZScroller(root.firstChild, {
-  scrollbars: true,
-  onScroll() {
-    console.log(zscroller.scroller.getValues());
-  },
-});
 </span></code></pre></div>
   </div>
   <a href="https://github.com/yiminghe/zscroller">
@@ -307,7 +323,7 @@ const zscroller = new ZScroller(root.firstChild, {
          data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png">
   </a>
   <script>FastClick.attach(document.body);</script>
-  <script src="common.js?nowrap"></script>
+  <script src="../common.js?nowrap"></script>
   <script src="demo.js?nowrap"></script>
 </body>
 
